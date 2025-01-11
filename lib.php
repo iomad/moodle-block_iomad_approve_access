@@ -201,7 +201,7 @@ class iomad_approve_access {
         }
 
         // Default return nothing.  We shouldn't get here.
-        return array();
+        return[];
     }
 
     /**
@@ -212,69 +212,45 @@ class iomad_approve_access {
      *        $event = stdclass();
      *
      **/
-    public static function register_user($user, $event, $waitlisted=0) {
-        global $DB;
+    public static function register_user($user, $trainingevent, $waitlisted=0) {
+        global $DB, $USER, $company;
 
-        // Set up the trainingevent record.
-        $trainingeventrecord = new stdclass();
-        $trainingeventrecord->userid = $user->id;
-        $trainingeventrecord->trainingeventid = $event->id;
-        $trainingeventrecord->waitlisted = $waitlisted;
+        // Get the CMID.
+        if (! $cm = get_coursemodule_from_instance('trainingevent', $trainingevent->id)) {
+            throw new moodle_exception('invalidcoursemodule');
+        }
 
         // Do we already have this?
-        if (!$currentrecord = $DB->get_record('trainingevent_users', array('userid' => $user->id, 'trainingeventid' => $event->id))) {
+        if (!$currentrecord = $DB->get_record('trainingevent_users', ['userid' => $user->id,
+                                                                      'trainingeventid' => $trainingevent->id])) {
+
+            // Set up the trainingevent record.
+            $currentrecord = (object) ['userid' => $user->id,
+                                       'trainingeventid' => $event->id,
+                                       'waitlisted' => $waitlisted,
+                                       'approved' => 1];
 
             // If not insert it.
-            if (!$trainingeventrecord->id = $DB->insert_record('trainingevent_users', $trainingeventrecord)) {
+            if (!$currentrecord->id = $DB->insert_record('trainingevent_users', $currentrecord)) {
 
                 // Throw an error if that doesn't work.
                 throw new moodle_exception(get_string('updatefailed', 'block_iomad_approve_access'));
             }
-            $currentrecord = $trainingeventrecord;
+        } else {
+            $DB->set_field('trainingevent_users', 'waitlisted', $waitlisted, ['id' => $currentrecord->id]);
+            $DB->set_field('trainingevent_users', 'approved', 1, ['id' => $currentrecord->id]);
         }
-        $DB->set_field('trainingevent_users', 'waitlisted', $waitlisted, ['id' => $currentrecord->id]);
 
-        // Get the CMID.
-        $cmidinfo = $DB->get_record_sql("SELECT * FROM {course_modules}
-                                         WHERE instance = :eventid
-                                         AND module = ( SELECT id FROM {modules}
-                                           WHERE name = 'trainingevent')", array('eventid' => $event->id));
-
-        $location = $DB->get_record('classroom', ['id' => $event->classroomid]);
-
-        if (empty($waitlisted)) {
-
-            // Add to the users calendar.
-            $calendarevent = new stdClass();
-            $calendarevent->eventtype = TRAININGEVENT_EVENT_TYPE; // Constant defined somewhere in your code - this can be any string value you want. It is a way to identify the event.
-            $calendarevent->type = CALENDAR_EVENT_TYPE_ACTION; // This is used for events we only want to display on the calendar, and are not needed on the block_myoverview.
-            $calendarevent->name = get_string('calendarstart', 'trainingevent', $event->name);
-            $calendarevent->description = format_module_intro('trainingevent', $event, $cmidinfo->id, false);
-            $calendarevent->format = FORMAT_HTML;
-            $eventlocation = format_string($location->name);
-            if (!empty($location->address)) {
-                $eventlocation .= ", " . format_string($location->address);
-            }
-            if (!empty($location->city)) {
-                $eventlocation .= ", " . format_string($location->city);
-            }
-            if (!empty($location->country)) {
-                $eventlocation .= ", " . format_string($location->country);
-            }
-            if (!empty($location->postcode)) {
-                $eventlocation .= ", " . format_string($location->postcode);
-            }
-            $calendarevent->location = $eventlocation; 
-            $calendarevent->courseid = $event->course;
-            $calendarevent->groupid = 0;
-            $calendarevent->userid = $user->id;
-            $calendarevent->modulename = 'trainingevent';
-            $calendarevent->instance = $event->id;
-            $calendarevent->timestart = $event->startdatetime;
-            $calendarevent->visible = instance_is_visible('trainingevent', $event);
-            $calendarevent->timeduration = $event->enddatetime - $event->startdatetime;
-
-            calendar_event::create($calendarevent, false);
-        }
+        // Fire an event for this.
+        $eventother = ['waitlisted' => 0,
+                       'skipemails' => true];
+        $event = \mod_trainingevent\event\user_attending::create(['context' => context_module::instance($cm->id),
+                                                                  'userid' => $USER->id,
+                                                                  'relateduserid' => $userid,
+                                                                  'objectid' => $trainingevent->id,
+                                                                  'companyid' => $usercompany->id,
+                                                                  'courseid' => $trainingevent->course,
+                                                                  'other' => $eventother]);
+        $event->trigger();
     }
 }
