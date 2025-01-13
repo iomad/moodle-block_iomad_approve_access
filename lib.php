@@ -226,7 +226,7 @@ class iomad_approve_access {
 
             // Set up the trainingevent record.
             $currentrecord = (object) ['userid' => $user->id,
-                                       'trainingeventid' => $event->id,
+                                       'trainingeventid' => $trainingevent->id,
                                        'waitlisted' => $waitlisted,
                                        'approved' => 1];
 
@@ -246,9 +246,9 @@ class iomad_approve_access {
                        'skipemails' => true];
         $event = \mod_trainingevent\event\user_attending::create(['context' => context_module::instance($cm->id),
                                                                   'userid' => $USER->id,
-                                                                  'relateduserid' => $userid,
+                                                                  'relateduserid' => $user->id,
                                                                   'objectid' => $trainingevent->id,
-                                                                  'companyid' => $usercompany->id,
+                                                                  'companyid' => $company->id,
                                                                   'courseid' => $trainingevent->course,
                                                                   'other' => $eventother]);
         $event->trigger();
