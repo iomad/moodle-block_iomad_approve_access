@@ -98,7 +98,7 @@ class approve_form extends moodleform {
                     $mform->addGroup($radioarray, 'approve_'.$result->userid.'_'.$result->courseid,
                                      $user->firstname. ' '. $user->lastname.' : '.$course->fullname.'
                                      <a href="'.
-                                     new moodle_url('/mod/trainingevent/manageclass.php', array('id' => $result->activityid)).'">'.
+                                     new moodle_url('/mod/trainingevent/view.php', array('id' => $result->activityid)).'">'.
                                      $activity->name.' '.date($dateformat, $activity->startdatetime).'</a>',
                                      array(' '), false);
                 } else {
@@ -110,7 +110,7 @@ class approve_form extends moodleform {
                     $mform->addGroup($radioarray, '_'.$result->userid.'_'.$result->courseid,
                                      $user->firstname. ' '. $user->lastname.' : '.$course->fullname.'
                                      <a href="'.
-                                     new moodle_url('/mod/trainingevent/manageclass.php', array('id' => $result->activityid)).'">'.
+                                     new moodle_url('/mod/trainingevent/view.php', array('id' => $result->activityid)).'">'.
                                      $activity->name.' '.date($dateformat, $activity->startdatetime).'</a><br><b>'.
                                      get_string('fullybooked', 'block_iomad_approve_access')."</b>",
                                      array(' '), false);

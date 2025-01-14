@@ -281,7 +281,7 @@ if ($data = $callform->get_data()) {
                         if ($location->isvirtual || $attending < $maxcapacity) {
                            $waitlisted = 0;
                         
-                        } else if ($event->haswaitlist) {
+                        } else if ($event->haswaitinglist) {
                             $waitlisted = 1;
                         } else {
                             $cancontinue = false;
@@ -309,7 +309,7 @@ if ($data = $callform->get_data()) {
                                 $usergroups = groups_get_user_groups($approvecourse->id, $approveuser->id);
                                 $userteachers = [];
                                 foreach ($usergroups as $usergroup => $junk) {
-                                    $userteachers = $userteachers + get_enrolled_users(context_module::instance($cmidinfo->id), 'mod/trainingevent:viewattendees', $usergroup);
+                                    $userteachers = $userteachers + get_enrolled_users(context_course::instance($approvecourse->id), 'mod/trainingevent:viewattendees', $usergroup);
                                 } 
                                 foreach ($userteachers as $userteacher) {
                                     EmailTemplate::send('user_signed_up_for_event_teacher', array('course' => $approvecourse,
