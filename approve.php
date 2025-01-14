@@ -320,6 +320,11 @@ if ($data = $callform->get_data()) {
                                                                                                   'event' => $event));
                                 }
                             }
+
+                            // Reset the module cache.
+                            $cm = get_coursemodule_from_instance('trainingevent', $event->id, $event->course);
+                            course_modinfo::purge_course_modules_cache($approvecourse->id, [$cm->id]);
+
                         }
                     } else if ($senddenied) {
                         EmailTemplate::send('course_classroom_denied', array('course' => $approvecourse,
