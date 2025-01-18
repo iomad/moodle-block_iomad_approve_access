@@ -47,7 +47,7 @@ class approve_form extends moodleform {
             if (!$department) {
                 $mform->addElement('html', '* '.get_string('managernotyetapproved', 'block_iomad_approve_access'));
             }
-            $dateformat = $CFG->iomad_date_format . ", g:ia";
+            $dateformat = $CFG->iomad_date_format . ", %I:%M%p";
             foreach ($results as $result) {
 
                 // Get the user info.
@@ -104,7 +104,7 @@ class approve_form extends moodleform {
                                      $user->firstname. ' '. $user->lastname.' : '.$course->fullname.'
                                      <a href="'.
                                      new moodle_url('/mod/trainingevent/view.php', array('id' => $cmid->id)).'">'.
-                                     $activity->name.' '.date($dateformat, $activity->startdatetime).'</a>',
+                                     $activity->name.' '.userdate($activity->startdatetime, $dateformat).'</a>',
                                      array(' '), false);
                 } else {
                     $radioarray[] =& $mform->createElement('radio',
@@ -116,7 +116,7 @@ class approve_form extends moodleform {
                                      $user->firstname. ' '. $user->lastname.' : '.$course->fullname.'
                                      <a href="'.
                                      new moodle_url('/mod/trainingevent/view.php', array('id' => $cmid->id)).'">'.
-                                     $activity->name.' '.date($dateformat, $activity->startdatetime).'</a><br><b>'.
+                                     $activity->name.' '.userdate($activity->startdatetime, $dateformat).'</a><br><b>'.
                                      get_string('fullybooked', 'block_iomad_approve_access')."</b>",
                                      array(' '), false);
                 }
